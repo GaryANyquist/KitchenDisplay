@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { testConnection } from './api';
 import { baseUrl, parseSeconds } from './lib/kitchen';
@@ -21,6 +21,7 @@ export function SettingsSheet({
   const [key, setKey] = useState(initial.key);
   const [warn, setWarn] = useState(String(initial.warnSeconds));
   const [late, setLate] = useState(String(initial.lateSeconds));
+  const [voice, setVoice] = useState(initial.voice);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const base = baseUrl(address);
   const warnS = parseSeconds(warn);
@@ -76,6 +77,15 @@ export function SettingsSheet({
         </View>
       </View>
       {!timesOk ? <Text style={{ color: c.late, marginTop: 10 }}>Enter whole seconds, with red later than yellow.</Text> : null}
+      <Text style={{ color: c.text, fontSize: 20, fontWeight: '800', marginTop: 28, marginBottom: 4 }}>Voice commands</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+        <Text style={{ color: c.muted, flex: 1 }}>
+          Listen through the microphone and complete orders by voice. Say "complete pager 12", "pager 12 done" or "order 41
+          complete". "Pager 12 ready" marks it ready. A number alone means the pager number on the ticket. Needs the microphone
+          permission and works on the Open tab.
+        </Text>
+        <Switch value={voice} onValueChange={setVoice} />
+      </View>
       {msg ? <Text style={{ color: msg.ok ? c.muted : c.late, marginTop: 14, fontSize: 16 }}>{msg.text}</Text> : null}
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
         <Btn label="Test connection" onPress={test} />
@@ -87,7 +97,7 @@ export function SettingsSheet({
             warnS !== null &&
             lateS !== null &&
             timesOk &&
-            onSave({ ...initial, address: base, key: key.replace(/\s+/g, ''), warnSeconds: warnS, lateSeconds: lateS })
+            onSave({ ...initial, address: base, key: key.replace(/\s+/g, ''), warnSeconds: warnS, lateSeconds: lateS, voice })
           }
           disabled={!base || !timesOk}
         />

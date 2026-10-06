@@ -23,6 +23,11 @@ register tablet --kfdisplay-sync--> SQL Server <--- server (this repo, src/) <--
 - The bar under the header totals what is still to make ("6 Tomato Soup, 4 Cheeseburger").
 - **Stations:** the category button picks which categories this screen shows (e.g. a Soups screen and a
   Grill screen). Remembered per browser, or put `?stations=cat1,cat2` in the URL.
+- **Voice commands (Android app, off by default):** Settings → Voice commands. The app listens through the microphone and
+  completes orders you speak: "complete pager 12", "pager 12 done", "order 41 complete"; "pager 12 ready" marks it ready.
+  A bare number means the pager number on the ticket (the order number if the ticket has no pager). It works on the Open tab,
+  shows what it did at the bottom of the screen, and a mistake is fixed with Completed → Recall. Uses Android's speech service
+  (`expo-speech-recognition`), which normally needs internet; the phrase parser is `app/src/lib/voice.ts` (tested).
 - Refunded orders never show. Open orders older than 12 hours are hidden.
 
 ## Android app

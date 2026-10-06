@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kitchen Display",
     "slug": "kitchen-display",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "landscape",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -16,6 +16,11 @@
       ["expo-screen-orientation", { "initialOrientation": "LANDSCAPE" }],
       ["expo-build-properties", { "android": { "minSdkVersion": 28, "usesCleartextTraffic": true } }],
       "expo-audio",
+      ["expo-speech-recognition", {
+        "microphonePermission": "Allow Kitchen Display to use the microphone for voice commands.",
+        "speechRecognitionPermission": "Allow Kitchen Display to use speech recognition for voice commands.",
+        "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+      }],
       ["expo-secure-store", { "configureAndroidBackup": false }],
       "expo-status-bar"
     ]

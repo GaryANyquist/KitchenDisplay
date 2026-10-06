@@ -5,6 +5,8 @@ import { AppState, Modal, Pressable, ScrollView, Text, View, useWindowDimensions
 import { fetchCategories, fetchTickets, lineAction, orderAction, type Connection } from './api';
 import { ageState, formatAge, newTicketIds, primaryAction, type AgeState, type Ticket, type TicketsResponse } from './lib/kitchen';
 import type { Settings } from './settings';
+import { parseVoiceCommand } from './lib/voice';
+import { useVoice } from './useVoice';
 import { c } from './theme';
 
 const POLL_MS = 3000;
@@ -30,6 +32,8 @@ export function Board({
   const [, setTick] = useState(0);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [picking, setPicking] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const busy = useRef(0);
   const known = useRef<Set<string> | null>(null);
   const chime = useAudioPlayer(require('../assets/chime.wav'));
@@ -104,9 +108,8 @@ export function Board({
     void write(() => lineAction(conn, uid, done));
   };
 
-  const press = (t: Ticket) => {
+  const act = (t: Ticket, action: 'ready' | 'bump' | 'recall') => {
     if (!data) return;
-    const action = primaryAction(t, view === 'completed');
     setData({
       ...data,
       tickets:
@@ -116,6 +119,28 @@ export function Board({
     });
     void write(() => orderAction(conn, t.id, action));
   };
+
+  const press = (t: Ticket) => act(t, primaryAction(t, view === 'completed'));
+
+  const say = (msg: string) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  };
+
+  // Voice commands: the latest tickets and handler are read through refs, so the listener never goes stale.
+  const latest = useRef({ tickets: [] as Ticket[], act, say });
+  latest.current = { tickets: data?.tickets ?? [], act, say };
+  const voiceStatus = useVoice({
+    enabled: settings.voice && view === 'active',
+    onFinal: (text) => {
+      const r = parseVoiceCommand(text, latest.current.tickets);
+      if (!r) return;
+      if (r.kind === 'nomatch') return latest.current.say(`No open ticket for ${r.label}`);
+      latest.current.act(r.ticket, r.action);
+      latest.current.say(r.action === 'bump' ? `Completed ${r.label}` : `Marked ${r.label} ready`);
+    },
+  });
 
   const now = Date.now() + offset;
   const tickets = data?.tickets ?? [];
@@ -152,6 +177,15 @@ export function Board({
           <Text style={{ color: c.late, fontWeight: '700', flexShrink: 1 }} numberOfLines={1}>
             {error}
           </Text>
+        ) : null}
+        {settings.voice ? (
+          <Chip
+            label={
+              view !== 'active' ? 'Voice paused' : voiceStatus === 'listening' ? 'Voice: listening' : voiceStatus === 'denied' ? 'Voice: no mic permission' : voiceStatus === 'unavailable' ? 'Voice: unavailable' : 'Voice: starting'
+            }
+            on={voiceStatus === 'listening'}
+            onPress={onSettings}
+          />
         ) : null}
         <Chip
           label={settings.sound ? 'Sound on' : 'Sound off'}
@@ -203,6 +237,12 @@ export function Board({
           />
         ))}
       </ScrollView>
+
+      {toast ? (
+        <View style={{ position: 'absolute', bottom: 24, alignSelf: 'center', backgroundColor: c.panel2, borderColor: c.line, borderWidth: 1, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 24 }}>
+          <Text style={{ color: c.text, fontSize: 20, fontWeight: '700' }}>{toast}</Text>
+        </View>
+      ) : null}
 
       <Modal visible={picking} transparent animationType="fade" onRequestClose={() => setPicking(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,.6)', justifyContent: 'center', alignItems: 'center' }}>

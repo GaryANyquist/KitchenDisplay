@@ -8,16 +8,18 @@ export interface Settings {
   /** Seconds until the badge turns yellow / red. */
   warnSeconds: number;
   lateSeconds: number;
+  /** Complete orders by voice ("complete pager 12"). Off by default. */
+  voice: boolean;
 }
 
-export const DEFAULTS: Settings = { address: '', key: '', stations: [], sound: true, warnSeconds: 300, lateSeconds: 600 };
+export const DEFAULTS: Settings = { address: '', key: '', stations: [], sound: true, warnSeconds: 300, lateSeconds: 600, voice: false };
 
-const K = { address: 'kds.address', key: 'kds.key', stations: 'kds.stations', sound: 'kds.sound', warn: 'kds.warnSeconds', late: 'kds.lateSeconds' };
+const K = { address: 'kds.address', key: 'kds.key', stations: 'kds.stations', sound: 'kds.sound', warn: 'kds.warnSeconds', late: 'kds.lateSeconds', voice: 'kds.voice' };
 
 export async function loadSettings(): Promise<Settings> {
   const get = (k: string) => SecureStore.getItemAsync(k).catch(() => null);
-  const [address, key, stations, sound, warn, late] = await Promise.all([
-    get(K.address), get(K.key), get(K.stations), get(K.sound), get(K.warn), get(K.late),
+  const [address, key, stations, sound, warn, late, voice] = await Promise.all([
+    get(K.address), get(K.key), get(K.stations), get(K.sound), get(K.warn), get(K.late), get(K.voice),
   ]);
   const secs = (v: string | null, d: number) => (v && /^[0-9]+$/.test(v) && Number(v) >= 1 ? Number(v) : d);
   let st: string[] = [];
@@ -28,6 +30,7 @@ export async function loadSettings(): Promise<Settings> {
   return { address: address ?? '', key: key ?? '', stations: st, sound: sound == null ? true : sound === '1',
     warnSeconds: secs(warn, DEFAULTS.warnSeconds),
     lateSeconds: secs(late, DEFAULTS.lateSeconds),
+    voice: voice === '1',
   };
 }
 
@@ -39,5 +42,6 @@ export async function saveSettings(s: Settings): Promise<void> {
     SecureStore.setItemAsync(K.sound, s.sound ? '1' : '0'),
     SecureStore.setItemAsync(K.warn, String(s.warnSeconds)),
     SecureStore.setItemAsync(K.late, String(s.lateSeconds)),
+    SecureStore.setItemAsync(K.voice, s.voice ? '1' : '0'),
   ]);
 }
