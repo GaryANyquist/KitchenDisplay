@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { testConnection } from './api';
-import { baseUrl } from './lib/kitchen';
+import { baseUrl, parseSeconds } from './lib/kitchen';
 import type { Settings } from './settings';
 import { c } from './theme';
 
@@ -19,8 +19,13 @@ export function SettingsSheet({
 }) {
   const [address, setAddress] = useState(initial.address);
   const [key, setKey] = useState(initial.key);
+  const [warn, setWarn] = useState(String(initial.warnSeconds));
+  const [late, setLate] = useState(String(initial.lateSeconds));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const base = baseUrl(address);
+  const warnS = parseSeconds(warn);
+  const lateS = parseSeconds(late);
+  const timesOk = warnS !== null && lateS !== null && lateS > warnS;
 
   const test = async () => {
     if (!base) return setMsg({ ok: false, text: 'Enter the PC name or address, e.g. CYMENUDISPLAY:8790' });
@@ -58,14 +63,33 @@ export function SettingsSheet({
         autoCorrect={false}
         style={input}
       />
+      <Text style={{ color: c.text, fontSize: 20, fontWeight: '800', marginTop: 28, marginBottom: 4 }}>Ticket colours</Text>
+      <Text style={{ color: c.muted, marginBottom: 10 }}>The ticket header is green, then turns yellow and then red as the order waits.</Text>
+      <View style={{ flexDirection: 'row', gap: 16 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: c.muted, marginBottom: 6 }}>Turns yellow after (seconds)</Text>
+          <TextInput value={warn} onChangeText={setWarn} keyboardType="number-pad" style={input} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: c.muted, marginBottom: 6 }}>Turns red after (seconds)</Text>
+          <TextInput value={late} onChangeText={setLate} keyboardType="number-pad" style={input} />
+        </View>
+      </View>
+      {!timesOk ? <Text style={{ color: c.late, marginTop: 10 }}>Enter whole seconds, with red later than yellow.</Text> : null}
       {msg ? <Text style={{ color: msg.ok ? c.muted : c.late, marginTop: 14, fontSize: 16 }}>{msg.text}</Text> : null}
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
         <Btn label="Test connection" onPress={test} />
         <Btn
           label="Save"
           primary
-          onPress={() => base && onSave({ ...initial, address: base, key: key.replace(/\s+/g, '') })}
-          disabled={!base}
+          onPress={() =>
+            base &&
+            warnS !== null &&
+            lateS !== null &&
+            timesOk &&
+            onSave({ ...initial, address: base, key: key.replace(/\s+/g, ''), warnSeconds: warnS, lateSeconds: lateS })
+          }
+          disabled={!base || !timesOk}
         />
         {!firstRun ? <Btn label="Cancel" onPress={onCancel} /> : null}
       </View>

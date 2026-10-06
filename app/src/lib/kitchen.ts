@@ -31,18 +31,26 @@ export interface TicketsResponse {
 
 export type AgeState = 'fresh' | 'warn' | 'late' | 'ready' | 'done';
 
+/** Settings entry: whole seconds, 1 to 86400; anything else is refused (null). */
+export function parseSeconds(input: string): number | null {
+  const v = input.trim();
+  if (!/^[0-9]+$/.test(v)) return null;
+  const n = Number(v);
+  return n >= 1 && n <= 86400 ? n : null;
+}
+
 /** Header colour state: green → yellow → red as the order ages; blue once ready; grey in Completed. */
 export function ageState(
   t: Pick<Ticket, 'createdAt' | 'readyAt'>,
   nowMs: number,
-  warnMinutes: number,
-  lateMinutes: number,
+  warnSeconds: number,
+  lateSeconds: number,
   completedView = false
 ): AgeState {
   if (completedView) return 'done';
   if (t.readyAt) return 'ready';
-  const mins = (nowMs - new Date(t.createdAt).getTime()) / 60000;
-  return mins >= lateMinutes ? 'late' : mins >= warnMinutes ? 'warn' : 'fresh';
+  const secs = (nowMs - new Date(t.createdAt).getTime()) / 1000;
+  return secs >= lateSeconds ? 'late' : secs >= warnSeconds ? 'warn' : 'fresh';
 }
 
 export function formatAge(ms: number): string {

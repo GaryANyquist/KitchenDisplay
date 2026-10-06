@@ -196,8 +196,8 @@ export function Board({
             width={cardWidth}
             nowMs={now}
             view={view}
-            warn={data!.warnMinutes}
-            late={data!.lateMinutes}
+            warn={settings.warnSeconds}
+            late={settings.lateSeconds}
             onLine={toggleLine}
             onPress={press}
           />
