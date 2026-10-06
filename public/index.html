@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitchen Display</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1e2127; --panel2: #272b33; --line: #343a44;
+    --text: #f2f4f7; --muted: #9aa3b0;
+    --ok: #1f9d55; --warn: #d4a017; --late: #d64545; --ready: #2f7dd1;
+    --accent: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.3 system-ui, "Segoe UI", sans-serif;
+         display: flex; flex-direction: column; -webkit-user-select: none; user-select: none; }
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0 8px 0 0; font-weight: 700; }
+  .tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; }
+  .tab { border: 0; background: transparent; color: var(--muted); padding: 10px 18px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .tab.on { background: var(--accent); color: #fff; }
+  .spacer { flex: 1; }
+  .btn { border: 1px solid var(--line); background: var(--panel2); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+  .btn.on { border-color: var(--accent); }
+  #clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 18px; min-width: 80px; text-align: right; }
+  #status { font-size: 13px; color: var(--muted); }
+  #status.bad { color: var(--late); font-weight: 700; }
+  #totals { display: flex; gap: 8px; padding: 8px 16px; overflow-x: auto; background: #181b20; border-bottom: 1px solid var(--line); min-height: 48px; align-items: center; }
+  #totals:empty { display: none; }
+  .chip { background: var(--panel2); border-radius: 999px; padding: 6px 14px; white-space: nowrap; font-size: 15px; }
+  .chip b { color: #fff; margin-right: 6px; font-size: 17px; }
+  main { flex: 1; overflow: auto; padding: 16px; }
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; align-items: start; }
+  .empty { color: var(--muted); text-align: center; margin-top: 18vh; font-size: 22px; }
+  .ticket { background: var(--panel); border-radius: 12px; overflow: hidden; border: 2px solid transparent; display: flex; flex-direction: column; }
+  .ticket .top { display: flex; align-items: baseline; gap: 8px; padding: 10px 14px; background: var(--ok); color: #fff; }
+  .ticket.warn .top { background: var(--warn); color: #1a1400; }
+  .ticket.late .top { background: var(--late); }
+  .ticket.ready .top { background: var(--ready); }
+  .ticket.done .top { background: #4b5563; }
+  .num { font-size: 28px; font-weight: 800; }
+  .who { font-size: 16px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .age { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 700; }
+  .sub { display: flex; gap: 8px; padding: 6px 14px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .sub .pill { background: var(--panel2); color: var(--text); padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .lines { padding: 4px 0; }
+  .line { display: flex; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .line:last-child { border-bottom: 0; }
+  .qty { font-weight: 800; font-size: 22px; min-width: 28px; }
+  .nm { font-size: 20px; font-weight: 600; }
+  .mod { color: #c7cdd6; font-size: 16px; margin-top: 2px; }
+  .note { color: #ffd479; font-size: 16px; margin-top: 2px; font-style: italic; }
+  .line.done .qty, .line.done .nm, .line.done .mod, .line.done .note { text-decoration: line-through; color: var(--muted); }
+  .line.done { opacity: .6; }
+  .check { margin-left: auto; align-self: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
+  .line.done .check { background: var(--ok); border-color: var(--ok); }
+  .line.done .check::after { content: "✓"; font-size: 16px; color: #fff; }
+  .actions { padding: 10px; display: flex; gap: 8px; }
+  .act { flex: 1; border: 0; border-radius: 10px; padding: 14px; font-size: 18px; font-weight: 700; cursor: pointer; color: #fff; background: var(--accent); }
+  .act.complete { background: var(--ok); }
+  .act.recall { background: #4b5563; }
+  .act:active, .btn:active { filter: brightness(.85); }
+  .at { font-size: 13px; color: var(--muted); padding: 0 14px 8px; }
+  #sheet { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 5; }
+  #sheet.open { display: flex; }
+  #sheet .box { background: var(--panel); border-radius: 14px; padding: 20px; width: min(420px, 92vw); max-height: 80vh; overflow: auto; }
+  #sheet h2 { margin: 0 0 4px; font-size: 18px; }
+  #sheet p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 12px 4px; font-size: 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .opt input { width: 22px; height: 22px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Kitchen</h1>
+  <div class="tabs">
+    <button class="tab on" data-view="active" id="tabActive">Open (0)</button>
+    <button class="tab" data-view="completed" id="tabCompleted">Completed</button>
+  </div>
+  <button class="btn" id="stationBtn">All items</button>
+  <span class="spacer"></span>
+  <span id="status"></span>
+  <button class="btn" id="soundBtn">🔇 Sound off</button>
+  <button class="btn" id="fsBtn">⛶</button>
+  <span id="clock"></span>
+</header>
+<div id="totals"></div>
+<main><div id="grid"></div></main>
+
+<div id="sheet"><div class="box">
+  <h2>Show these categories</h2>
+  <p>Pick the ones for this screen (a station). Nothing picked shows every item.</p>
+  <div id="stationList"></div>
+  <div class="actions"><button class="act" id="stationDone">Done</button></div>
+</div></div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const DEMO = params.has('demo');
+  const store = {
+    get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+    set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+
+  let view = 'active';
+  let stations = params.get('stations') ? params.get('stations').split(',') : store.get('stations', []);
+  let sound = store.get('sound', false);
+  let data = { tickets: [], totals: [], warnMinutes: 5, lateMinutes: 10, now: Date.now() };
+  let offset = 0;            // server clock minus this device's clock
+  let busy = 0;              // in-flight writes; polling waits for them
+  let knownIds = null;       // ticket ids already seen, to chime on new ones
+  let categories = [];
+
+  // ---- demo data (?demo=1): lets the screen run without a database -------
+  const demo = (() => {
+    const t0 = Date.now();
+    const mk = (id, n, name, pager, minsAgo, lines) => ({ id, number: n, name, pager, createdAt: new Date(t0 - minsAgo * 60000).toISOString(), readyAt: null, completedAt: null, lines });
+    const L = (uid, name, qty, mods = [], note = null) => ({ uid, name, qty, mods, note, done: false });
+    return {
+      tickets: [
+        mk('d1', 41, 'Sam', '12', 12, [L('l1', 'Cheeseburger', 2, ['Burger Sauce', 'No Pickles']), L('l2', 'Dill Pickle Fries', 1, ['Large'])]),
+        mk('d2', 42, null, '7', 6, [L('l3', 'Meatball Sub', 1, [], 'extra cheese'), L('l4', 'Tomato Soup', 2, ['Bowl'])]),
+        mk('d3', 43, 'Priya', null, 2, [L('l5', 'Wing Dings', 1), L('l6', 'Hamburger', 1, ['Mayo', 'Lettuce'])]),
+        mk('d4', 44, 'Lee', '3', 0.3, [L('l7', 'Tomato Soup', 1, ['Cup'])]),
+      ],
+    };
+  })();
+  async function api(path, opts) {
+    if (!DEMO) {
+      const r = await fetch(path, opts);
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+      return r.json();
+    }
+    const m = (opts && opts.method) || 'GET';
+    if (m === 'GET' && path.startsWith('/api/categories')) return [{ id: 'burgers', name: 'Burgers' }, { id: 'soups', name: 'Soups' }];
+    if (m === 'GET') {
+      const done = path.includes('view=completed');
+      const tickets = demo.tickets.filter((t) => !!t.completedAt === done);
+      const tot = {};
+      if (!done) tickets.forEach((t) => t.lines.forEach((l) => { if (!l.done) tot[l.name] = (tot[l.name] || 0) + l.qty; }));
+      return { now: new Date().toISOString(), warnMinutes: 5, lateMinutes: 10, tickets: JSON.parse(JSON.stringify(tickets)),
+               totals: Object.entries(tot).map(([name, qty]) => ({ name, qty })).sort((a, b) => b.qty - a.qty) };
+    }
+    const p = path.split('/').filter(Boolean);
+    const now = new Date().toISOString();
+    if (p[1] === 'orders') {
+      const t = demo.tickets.find((x) => x.id === p[2]);
+      if (p[3] === 'ready') t.readyAt = t.readyAt || now;
+      if (p[3] === 'bump') { t.completedAt = now; t.readyAt = t.readyAt || now; }
+      if (p[3] === 'recall') t.completedAt = null;
+    } else {
+      demo.tickets.forEach((t) => t.lines.forEach((l) => { if (l.uid === p[2]) l.done = p[3] === 'done'; }));
+    }
+    return { ok: true };
+  }
+
+  // ---- helpers -----------------------------------------------------------
+  const nowMs = () => Date.now() + offset;
+  const fmtAge = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function ageClass(t) {
+    if (view === 'completed') return 'done';
+    if (t.readyAt) return 'ready';
+    const mins = (nowMs() - new Date(t.createdAt)) / 60000;
+    return mins >= data.lateMinutes ? 'late' : mins >= data.warnMinutes ? 'warn' : '';
+  }
+
+  // ---- render ------------------------------------------------------------
+  function render() {
+    const grid = $('grid');
+    if (data.tickets.length === 0) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1">${view === 'active' ? 'No open orders' : 'Nothing bumped yet'}</div>`;
+    } else {
+      grid.innerHTML = data.tickets.map((t) => {
+        const allDone = t.lines.every((l) => l.done);
+        const cls = ageClass(t);
+        const age = view === 'completed' ? fmtAge(new Date(t.completedAt) - new Date(t.createdAt)) : fmtAge(nowMs() - new Date(t.createdAt));
+        const lines = t.lines.map((l) => `
+          <div class="line ${l.done ? 'done' : ''}" data-line="${esc(l.uid)}">
+            <div class="qty">${l.qty}</div>
+            <div><div class="nm">${esc(l.name)}</div>
+              ${l.mods.map((m) => `<div class="mod">+ ${esc(m)}</div>`).join('')}
+              ${l.note ? `<div class="note">“${esc(l.note)}”</div>` : ''}</div>
+            <div class="check"></div>
+          </div>`).join('');
+        let actions;
+        if (view === 'completed') actions = `<button class="act recall" data-recall="${esc(t.id)}">Recall</button>`;
+        else if (!t.readyAt && !allDone) actions = `<button class="act" data-ready="${esc(t.id)}">Ready</button>`;
+        else actions = `<button class="act complete" data-bump="${esc(t.id)}">Complete</button>`;
+        return `<div class="ticket ${cls}" data-id="${esc(t.id)}">
+          <div class="top"><span class="num">#${t.number}</span><span class="who">${esc(t.name || '')}</span><span class="age" data-age="${esc(t.id)}">${age}</span></div>
+          <div class="sub"><span>${fmtTime(t.createdAt)}</span>${t.pager ? `<span class="pill">Pager ${esc(t.pager)}</span>` : ''}${t.readyAt && view === 'active' ? '<span class="pill">Ready</span>' : ''}</div>
+          <div class="lines">${lines}</div>
+          <div class="actions">${actions}</div>
+        </div>`;
+      }).join('');
+    }
+    $('totals').innerHTML = data.totals.map((x) => `<span class="chip"><b>${x.qty}</b>${esc(x.name)}</span>`).join('');
+    if (view === 'active') $('tabActive').textContent = `Open (${data.tickets.length})`;
+  }
+
+  function tickClock() {
+    $('clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (view !== 'active') return;
+    for (const t of data.tickets) {
+      const el = document.querySelector(`[data-age="${CSS.escape(t.id)}"]`);
+      if (!el) continue;
+      el.textContent = fmtAge(nowMs() - new Date(t.createdAt));
+      const card = el.closest('.ticket');
+      const c = ageClass(t);
+      card.classList.toggle('warn', c === 'warn');
+      card.classList.toggle('late', c === 'late');
+      card.classList.toggle('ready', c === 'ready');
+    }
+  }
+
+  // ---- data --------------------------------------------------------------
+  async function load() {
+    if (busy) return;
+    try {
+      const q = `/api/tickets?view=${view}${stations.length ? '&stations=' + encodeURIComponent(stations.join(',')) : ''}`;
+      const d = await api(q);
+      if (busy) return;
+      offset = new Date(d.now).getTime() - Date.now();
+      data = d;
+      $('status').textContent = ''; $('status').className = '';
+      if (view === 'active') {
+        const ids = new Set(d.tickets.map((t) => t.id));
+        if (knownIds && [...ids].some((i) => !knownIds.has(i))) chime();
+        knownIds = ids;
+      }
+      render();
+    } catch (e) {
+      $('status').textContent = 'Can’t reach the database – retrying'; $('status').className = 'bad';
+    }
+  }
+
+  async function write(path) {
+    busy++;
+    try { await api(path, { method: 'POST' }); } catch (e) { $('status').textContent = 'Save failed: ' + e.message; $('status').className = 'bad'; }
+    finally { busy--; }
+    load();
+  }
+
+  // ---- sound -------------------------------------------------------------
+  let audio = null;
+  function chime() {
+    if (!sound) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1175].forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = f; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, audio.currentTime + i * 0.18);
+        g.gain.exponentialRampToValueAtTime(0.3, audio.currentTime + i * 0.18 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + i * 0.18 + 0.4);
+        o.connect(g); g.connect(audio.destination);
+        o.start(audio.currentTime + i * 0.18); o.stop(audio.currentTime + i * 0.18 + 0.45);
+      });
+    } catch {}
+  }
+  function paintSound() { $('soundBtn').textContent = sound ? '🔔 Sound on' : '🔇 Sound off'; $('soundBtn').classList.toggle('on', sound); }
+  $('soundBtn').onclick = () => { sound = !sound; store.set('sound', sound); paintSound(); chime(); };
+  $('fsBtn').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); };
+
+  // ---- interaction -------------------------------------------------------
+  $('grid').addEventListener('click', (e) => {
+    const line = e.target.closest('[data-line]');
+    if (line && view === 'active') {
+      const uid = line.dataset.line;
+      const l = data.tickets.flatMap((t) => t.lines).find((x) => x.uid === uid);
+      l.done = !l.done;
+      line.classList.toggle('done', l.done);
+      write(`/api/lines/${encodeURIComponent(uid)}/${l.done ? 'done' : 'undone'}`);
+      return;
+    }
+    const b = e.target.closest('button[data-ready],button[data-bump],button[data-recall]');
+    if (!b) return;
+    const id = b.dataset.ready || b.dataset.bump || b.dataset.recall;
+    const action = b.dataset.ready ? 'ready' : b.dataset.bump ? 'bump' : 'recall';
+    if (action !== 'ready') data.tickets = data.tickets.filter((t) => t.id !== id);
+    else data.tickets.find((t) => t.id === id).readyAt = new Date(nowMs()).toISOString();
+    render();
+    write(`/api/orders/${encodeURIComponent(id)}/${action}`);
+  });
+
+  document.querySelectorAll('.tab').forEach((b) => (b.onclick = () => {
+    view = b.dataset.view;
+    document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b));
+    data = { ...data, tickets: [], totals: [] }; render(); load();
+  }));
+
+  async function openStations() {
+    if (!categories.length) { try { categories = await api('/api/categories'); } catch {} }
+    $('stationList').innerHTML = categories.map((c) =>
+      `<label class="opt"><input type="checkbox" value="${esc(c.id)}" ${stations.includes(c.id) ? 'checked' : ''}>${esc(c.name)}</label>`).join('');
+    $('sheet').classList.add('open');
+  }
+  $('stationBtn').onclick = openStations;
+  $('stationDone').onclick = () => {
+    stations = [...document.querySelectorAll('#stationList input:checked')].map((i) => i.value);
+    store.set('stations', stations);
+    $('sheet').classList.remove('open');
+    paintStation(); knownIds = null; load();
+  };
+  function paintStation() {
+    const names = categories.filter((c) => stations.includes(c.id)).map((c) => c.name);
+    $('stationBtn').textContent = stations.length ? (names.join(', ') || `${stations.length} categories`) : 'All items';
+    $('stationBtn').classList.toggle('on', stations.length > 0);
+  }
+
+  paintSound(); paintStation();
+  api('/api/categories').then((c) => { categories = c; paintStation(); }).catch(() => {});
+  load();
+  setInterval(load, 3000);
+  setInterval(tickClock, 1000);
+  tickClock();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+﻿{
+  "name": "kitchen-display",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Square-style kitchen display for the Comfortably Yum register: reads the register's orders from the KFDisplay SQL Server and lets the kitchen bump them",
+  "type": "module",
+  "main": "src/main.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test test/tickets.test.js"
+  },
+  "dependencies": {
+    "mssql": "^12.7.2"
+  }
+}
+
