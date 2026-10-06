@@ -55,11 +55,11 @@ The tablet needs to be on the same Wi-Fi as the PC, and the PC must allow port 8
 In an **administrator** Command Prompt (once):
 
 ```
-schtasks /Create /TN "Kitchen Display" /TR "C:SourceKitchenDisplaystart-kitchen.cmd" /SC ONSTART /RU SYSTEM /RL HIGHEST /F
+schtasks /Create /TN "Kitchen Display" /TR "C:\Source\KitchenDisplay\start-kitchen.cmd" /SC ONSTART /RU SYSTEM /RL HIGHEST /F
 schtasks /Run /TN "Kitchen Display"
 ```
 
-Output goes to `logskitchen.log`. Restart it with `schtasks /End /TN "Kitchen Display"` (and stop the `node.exe` using port 8790 if it stays up), then `schtasks /Run /TN "Kitchen Display"`.
+Output goes to `logs\kitchen.log`. Restart it with `schtasks /End /TN "Kitchen Display"` (and stop the `node.exe` using port 8790 if it stays up), then `schtasks /Run /TN "Kitchen Display"`.
 
 Set `KDS_KEY` in `.env` to require a key (the Android app asks for it; for the web page add `?key=...`). With no key the server is open to the LAN.
 
