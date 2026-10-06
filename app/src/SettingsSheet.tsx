@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
@@ -103,6 +104,9 @@ export function SettingsSheet({
         />
         {!firstRun ? <Btn label="Cancel" onPress={onCancel} /> : null}
       </View>
+      <Text style={{ color: c.muted, fontSize: 14, textAlign: 'center', marginTop: 40 }}>
+        Kitchen Display version {Constants.expoConfig?.version ?? '?'}
+      </Text>
     </ScrollView>
   );
 }
