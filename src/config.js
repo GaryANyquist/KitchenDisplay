@@ -63,6 +63,7 @@ export function loadConfig(rawEnv = process.env, fileEnv = loadDotEnv()) {
     sql,
     port: int(env.KDS_PORT, 8790),
     host: env.KDS_HOST || '0.0.0.0',
+    key: env.KDS_KEY || '',
     warnMinutes: int(env.KDS_WARN_MINUTES, 5),
     lateMinutes: int(env.KDS_LATE_MINUTES, 10),
     windowHours: int(env.KDS_WINDOW_HOURS, 12),

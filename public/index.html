@@ -130,7 +130,8 @@
   })();
   async function api(path, opts) {
     if (!DEMO) {
-      const r = await fetch(path, opts);
+      const key = params.get('key');
+      const r = await fetch(path, key ? { ...opts, headers: { Authorization: 'Bearer ' + key } } : opts);
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
       return r.json();
     }

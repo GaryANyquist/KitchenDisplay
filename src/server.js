@@ -1,4 +1,5 @@
 /** Tiny HTTP server: the display page plus a JSON API. No framework. */
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -15,6 +16,16 @@ const MIME = {
   '.css': 'text/css; charset=utf-8',
 };
 
+const digest = (v) => createHash('sha256').update(v).digest();
+
+/** With no key configured the API is open (LAN only); with one, the Android app and web page must send it. */
+export function authorized(header, queryKey, key) {
+  if (!key) return true;
+  const m = /^Bearer (.+)$/.exec(header ?? '');
+  const given = m ? m[1] : queryKey ?? '';
+  return timingSafeEqual(digest(given), digest(key));
+}
+
 function send(res, status, body, type = 'application/json; charset=utf-8') {
   res.writeHead(status, { 'content-type': type, 'cache-control': 'no-store' });
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
@@ -25,6 +36,13 @@ export function createKitchenServer(config) {
     try {
       const url = new URL(req.url, 'http://x');
       const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+
+      if (parts[0] === 'api' && !authorized(req.headers.authorization, url.searchParams.get('key'), config.key)) {
+        return send(res, 401, { error: 'bad key' });
+      }
+      if (req.method === 'GET' && parts[0] === 'api' && parts[1] === 'health') {
+        return send(res, 200, { ok: true, database: config.sql.database });
+      }
 
       if (req.method === 'GET' && parts[0] === 'api' && parts[1] === 'tickets') {
         const view = url.searchParams.get('view') === 'completed' ? 'completed' : 'active';

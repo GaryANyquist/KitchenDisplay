@@ -8,7 +8,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "start": "node src/main.js",
-    "test": "node --test test/tickets.test.js"
+    "test": "node --test test/tickets.test.js test/server.test.js"
   },
   "dependencies": {
     "mssql": "^12.7.2"

@@ -1,0 +1,28 @@
+{
+  "name": "kitchen-display-android",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "dependencies": {
+    "expo": "~57.0.24",
+    "expo-audio": "~57.0.5",
+    "expo-build-properties": "~57.0.22",
+    "expo-keep-awake": "~57.0.2",
+    "expo-screen-orientation": "~57.0.2",
+    "expo-secure-store": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/kitchen.test.ts",
+    "build:local": "node scripts/build-local-apk.js"
+  }
+}

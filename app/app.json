@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Kitchen Display",
+    "slug": "kitchen-display",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.davcotech.kitchendisplay",
+      "screenOrientation": "landscape",
+      "predictiveBackGestureEnabled": false,
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      ["expo-screen-orientation", { "initialOrientation": "LANDSCAPE" }],
+      ["expo-build-properties", { "android": { "minSdkVersion": 28, "usesCleartextTraffic": true } }],
+      "expo-audio",
+      ["expo-secure-store", { "configureAndroidBackup": false }],
+      "expo-status-bar"
+    ]
+  }
+}

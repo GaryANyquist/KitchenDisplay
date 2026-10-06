@@ -1,8 +1,16 @@
 # Kitchen Display
 
 A Square-KDS-style kitchen screen for the Comfortably Yum register. It reads the register's orders from the
-**KFDisplay SQL Server** database (the one `kfdisplay-sync` fills from the tablet) and shows them as tickets in
-any browser: a kitchen TV, a tablet, a phone.
+**KFDisplay SQL Server** database (the one `kfdisplay-sync` fills from the tablet).
+
+```
+register tablet --kfdisplay-sync--> SQL Server <--- server (this repo, src/) <--- Android app (app/)
+                     tablet <--/v1/kitchen-status-- kfdisplay-sync <---'          or any browser
+```
+
+- **`app/`** is the **Android app** for the kitchen tablet (Expo / React Native, landscape, keeps the screen awake,
+  chimes on new orders). It talks to the server below over the truck's Wi-Fi; an Android app can't reach SQL Server directly.
+- **`src/` + `public/`** is the server on the PC. It also serves the same screen as a web page for a TV or phone.
 
 ## How it works like Square's Kitchen Display
 
@@ -17,7 +25,17 @@ any browser: a kitchen TV, a tablet, a phone.
   Grill screen). Remembered per browser, or put `?stations=cat1,cat2` in the URL.
 - Refunded orders never show. Open orders older than 12 hours are hidden.
 
-## Setup
+## Android app
+
+1. On the PC: `npm run build:local` inside `app/` (needs Java 17 and the Android SDK, like the register app). Bump `expo.version`
+   in `app/app.json` first. The APK lands in `app/dist-apk/KitchenDisplay-<version>.apk`; copy it to the kitchen tablet and install it
+   (allow installs from that source).
+2. Open the app. First time it asks for the PC (`CYMENUDISPLAY:8790`, or the PC's IP) and the key if `KDS_KEY` is set. **Test connection**, then Save.
+3. Station and sound settings are on the top bar; Settings reopens the connection screen.
+
+The tablet needs to be on the same Wi-Fi as the PC, and the PC must allow port 8790 through the firewall.
+
+## Server setup (on the PC)
 
 1. In SSMS (as administrator) run `setup/01-create-kitchen-login.sql` after replacing `CHANGE_ME`. It creates
    `dbo.kitchen_line_done` (the ticked-off items) and a `kitchen_display` login that can read the register tables
@@ -27,7 +45,7 @@ any browser: a kitchen TV, a tablet, a phone.
 4. Open `http://<this PC's name>:8790` on the kitchen screen (allow the port through Windows Firewall).
    Try `http://localhost:8790/?demo=1` to see the screen with made-up orders and no database.
 
-The server has no login: keep it on the truck's own network.
+Set `KDS_KEY` in `.env` to require a key (the Android app asks for it; for the web page add `?key=...`). With no key the server is open to the LAN.
 
 ## Files
 
