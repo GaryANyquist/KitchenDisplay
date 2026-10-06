@@ -290,7 +290,7 @@ function TicketCard({
           backgroundColor: stateColor[state],
         }}
       >
-        <Text style={{ color: headText, fontSize: 28, fontWeight: '800' }}>#{t.number}</Text>
+        <Text style={{ color: headText, fontSize: 28, fontWeight: '800' }}>{t.pager ? `Pager ${t.pager}` : `#${t.number}`}</Text>
         <Text style={{ color: headText, fontSize: 16, fontWeight: '600', flex: 1 }} numberOfLines={1}>
           {t.name ?? ''}
         </Text>
@@ -298,7 +298,7 @@ function TicketCard({
       </View>
       <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 14, paddingVertical: 6, borderBottomWidth: 1, borderColor: c.line }}>
         <Text style={{ color: c.muted, fontSize: 13 }}>{fmtTime(t.createdAt)}</Text>
-        {t.pager ? <Pill text={`Pager ${t.pager}`} /> : null}
+        {t.pager ? <Pill text={`Order #${t.number}`} /> : null}
         {t.readyAt && view === 'active' ? <Pill text="Ready" /> : null}
       </View>
       {t.lines.map((l) => (

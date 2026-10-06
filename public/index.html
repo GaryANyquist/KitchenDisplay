@@ -194,8 +194,8 @@
         else if (!t.readyAt && !allDone) actions = `<button class="act" data-ready="${esc(t.id)}">Ready</button>`;
         else actions = `<button class="act complete" data-bump="${esc(t.id)}">Complete</button>`;
         return `<div class="ticket ${cls}" data-id="${esc(t.id)}">
-          <div class="top"><span class="num">#${t.number}</span><span class="who">${esc(t.name || '')}</span><span class="age" data-age="${esc(t.id)}">${age}</span></div>
-          <div class="sub"><span>${fmtTime(t.createdAt)}</span>${t.pager ? `<span class="pill">Pager ${esc(t.pager)}</span>` : ''}${t.readyAt && view === 'active' ? '<span class="pill">Ready</span>' : ''}</div>
+          <div class="top"><span class="num">${t.pager ? 'Pager ' + esc(t.pager) : '#' + t.number}</span><span class="who">${esc(t.name || '')}</span><span class="age" data-age="${esc(t.id)}">${age}</span></div>
+          <div class="sub"><span>${fmtTime(t.createdAt)}</span>${t.pager ? `<span class="pill">Order #${t.number}</span>` : ''}${t.readyAt && view === 'active' ? '<span class="pill">Ready</span>' : ''}</div>
           <div class="lines">${lines}</div>
           <div class="actions">${actions}</div>
         </div>`;

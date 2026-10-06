@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kitchen Display",
     "slug": "kitchen-display",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "landscape",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
