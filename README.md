@@ -45,6 +45,8 @@ The tablet needs to be on the same Wi-Fi as the PC, and the PC must allow port 8
 1. In SSMS (as administrator) run `setup/01-create-kitchen-login.sql` after replacing `CHANGE_ME`. It creates
    `dbo.kitchen_line_done` (the ticked-off items) and a `kitchen_display` login that can read the register tables
    and change only `orders.order_up_at`, `orders.completed_at` and that one table.
+   (KFIDisplay 2.0.5+ does this by itself when it has to create a missing KFDisplay database: it makes the
+   `kitchen_display` login with a random password in `C:\KFDisplay\kitchen_display-password.txt`, so skip this step then.)
 2. `copy .env.example .env` and fill in `DB_*` (same server settings as `kfdisplay-sync`).
 3. `npm install`, then `npm start`.
 4. Open `http://<this PC's name>:8790` on the kitchen screen (allow the port through Windows Firewall).
