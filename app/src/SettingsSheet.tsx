@@ -41,7 +41,7 @@ export function SettingsSheet({
 
   return (
     <ScrollView contentContainerStyle={{ padding: 32, maxWidth: 640, alignSelf: 'center', width: '100%' }}>
-      <Text style={{ color: c.text, fontSize: 28, fontWeight: '800', marginBottom: 6 }}>Kitchen Display</Text>
+      <Text style={{ color: c.text, fontSize: 28, fontWeight: '800', marginBottom: 6 }}>Annaware Kitchen Display</Text>
       <Text style={{ color: c.muted, fontSize: 16, marginBottom: 24 }}>
         {firstRun ? 'Connect to the PC that runs the Kitchen Display server.' : 'Settings'}
       </Text>
@@ -105,7 +105,7 @@ export function SettingsSheet({
         {!firstRun ? <Btn label="Cancel" onPress={onCancel} /> : null}
       </View>
       <Text style={{ color: c.muted, fontSize: 14, textAlign: 'center', marginTop: 40 }}>
-        Kitchen Display version {Constants.expoConfig?.version ?? '?'}
+        Annaware Kitchen Display version {Constants.expoConfig?.version ?? '?'}
       </Text>
     </ScrollView>
   );
