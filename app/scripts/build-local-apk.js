@@ -17,7 +17,7 @@ const fail = (m) => { console.error(`\n${m}`); process.exit(1); };
 
 function findJava() {
   if (process.env.JAVA_HOME && fs.existsSync(process.env.JAVA_HOME)) return process.env.JAVA_HOME;
-  const base = 'C:\Program Files\Microsoft';
+  const base = 'C:\\Program Files\\Microsoft';
   const jdk = fs.existsSync(base) ? fs.readdirSync(base).find((d) => /^jdk-17/.test(d)) : undefined;
   if (!jdk) fail('Java 17 not found. Install it with: winget install Microsoft.OpenJDK.17');
   return path.join(base, jdk);
