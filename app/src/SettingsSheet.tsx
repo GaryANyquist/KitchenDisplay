@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 
 import { testConnection } from './api';
 import { baseUrl, parseSeconds } from './lib/kitchen';
@@ -86,6 +86,20 @@ export function SettingsSheet({
           permission and works on the Open tab.
         </Text>
         <Switch value={voice} onValueChange={setVoice} />
+      </View>
+      <Text style={{ color: c.text, fontSize: 20, fontWeight: '800', marginTop: 28, marginBottom: 4 }}>Open when the tablet starts</Text>
+      <Text style={{ color: c.muted, marginBottom: 10 }}>
+        Android opens its Home app every time the tablet turns on. Make this app the Home app and the kitchen board comes up
+        by itself after a restart or a power cut. Tap the button, choose Annaware Kitchen Display, then confirm. To go back,
+        open the same screen and choose the tablet's original Home app.
+      </Text>
+      <View style={{ flexDirection: 'row' }}>
+        <Btn
+          label="Choose Home app"
+          onPress={() => {
+            Linking.sendIntent('android.settings.HOME_SETTINGS').catch(() => Linking.openSettings().catch(() => {}));
+          }}
+        />
       </View>
       {msg ? <Text style={{ color: msg.ok ? c.muted : c.late, marginTop: 14, fontSize: 16 }}>{msg.text}</Text> : null}
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
